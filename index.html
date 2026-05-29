@@ -71,7 +71,7 @@
           <div class="card rounded-2xl p-5 shadow md:col-span-2">
             <div class="text-sm uppercase tracking-wide text-slate-500 font-bold">Food</div>
             <p class="mt-2 text-slate-700">
-              We’ll supply <b>hot dogs and burgers</b>. Please bring something to share—side, dessert, drink, snack, or whatever sounds good, and a chair. BYOB, but we could do another keg. Please message me separately if you are interested in that. 
+              We’ll supply <b>hot dogs and burgers</b>. Please bring something to share—side, dessert, drink, snack, or whatever sounds good, and a chair. <b>BYOB</b>, but we could do another keg. Please message me separately if you are interested in that. 
               When you RSVP, please enter what you plan to bring.
             </p>
           </div>
@@ -123,6 +123,16 @@
               <input id="bringing" name="bringing" class="field" placeholder="Side, dessert, drinks, etc." />
             </div>
 
+            <div>
+            <label class="block text-sm font-bold mb-1" for="keg">Interested in throwing down for a keg?</label>
+            <select id="keg" name="keg" class="field">
+              <option value="">Select one</option>
+              <option value="Yes">Yes, I’d throw down</option>
+              <option value="Maybe">Maybe</option>
+              <option value="No">No thanks</option>
+            </select>
+          </div>
+            
             <div>
               <label class="block text-sm font-bold mb-1" for="notes">Notes</label>
               <textarea id="notes" name="notes" class="field" rows="3" placeholder="Camping? leaving early? anything else?"></textarea>
@@ -266,13 +276,14 @@ $form.addEventListener('submit', async (e)=>{
   }
 
   const entry = {
-    id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || String(Date.now()),
-    name,
-    status: String(formData.get('status') || 'Yes'),
-    guests: Number(formData.get('guests') || 0),
-    bringing: String(formData.get('bringing') || '').trim(),
-    notes: String(formData.get('notes') || '').trim(),
-    updatedAt: new Date().toISOString()
+  id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || String(Date.now()),
+  name,
+  status: String(formData.get('status') || 'Yes'),
+  guests: Number(formData.get('guests') || 0),
+  bringing: String(formData.get('bringing') || '').trim(),
+  keg: String(formData.get('keg') || '').trim(),
+  notes: String(formData.get('notes') || '').trim(),
+  updatedAt: new Date().toISOString()
   };
 
   const existingIdx = (state.rsvps || []).findIndex(r => r.id === entry.id);
