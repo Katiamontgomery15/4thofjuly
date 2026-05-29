@@ -112,7 +112,18 @@
                 <option value="No">No, can’t make it</option>
               </select>
             </div>
-
+      
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button type="button" onclick="downloadICS()" class="rounded-xl bg-white text-blue-800 font-extrabold px-4 py-2 hover:bg-blue-50">
+                Add to Apple/Outlook Calendar
+              </button>
+            
+              <a id="googleCalendarLink" target="_blank" rel="noopener"
+                 class="text-center rounded-xl bg-red-600 text-white font-extrabold px-4 py-2 hover:bg-red-700">
+                Add to Google Calendar
+              </a>
+            </div>
+            
             <div>
               <label class="block text-sm font-bold mb-1" for="guests">How many people?</label>
               <input id="guests" name="guests" class="field" type="number" min="0" step="1" value="1" />
@@ -246,6 +257,7 @@ function render(){
           }">${escapeHtml(r.status)}</span>
         </div>
         ${r.bringing ? `<div class="mt-2 text-sm"><b>Bringing:</b> ${escapeHtml(r.bringing)}</div>` : ''}
+        ${r.keg ? `<div class="mt-1 text-sm"><b>Keg:</b> ${escapeHtml(r.keg)}</div>` : ''}
         ${r.notes ? `<div class="mt-1 text-sm text-slate-600"><b>Notes:</b> ${escapeHtml(r.notes)}</div>` : ''}
       </div>
     `).join('');
@@ -288,7 +300,65 @@ function stopPolling(){
 }
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopPolling(); else startPolling(); });
 
+const EVENT_DETAILS = {
+  title: "4th of July BBQ & Firework Show",
+  location: "9122 184th Ave NE, Granite Falls, WA 98252",
+  description:
+    "Come celebrate with us! BBQ starts around 6:00 PM. We'll supply hot dogs and burgers. Please bring something to share and a chair. BYOB. Firework show after dusk.",
+  start: "20260704T150000",
+  end: "20260704T230000"
+};
+
+function downloadICS(){
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Katia 4th of July BBQ//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:katia-4th-of-july-2026@montgomery",
+    "DTSTAMP:20260704T000000Z",
+    "DTSTART;TZID=America/Los_Angeles:" + EVENT_DETAILS.start,
+    "DTEND;TZID=America/Los_Angeles:" + EVENT_DETAILS.end,
+    "SUMMARY:" + EVENT_DETAILS.title,
+    "LOCATION:" + EVENT_DETAILS.location,
+    "DESCRIPTION:" + EVENT_DETAILS.description,
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\\r\\n");
+
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "4th-of-july-bbq-fireworks.ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+function setupGoogleCalendarLink(){
+  const text = encodeURIComponent(EVENT_DETAILS.title);
+  const details = encodeURIComponent(EVENT_DETAILS.description);
+  const location = encodeURIComponent(EVENT_DETAILS.location);
+
+  const url =
+    "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    "&text=" + text +
+    "&dates=20260704T220000Z/20260705T060000Z" +
+    "&details=" + details +
+    "&location=" + location;
+
+  const link = document.querySelector("#googleCalendarLink");
+  if (link) link.href = url;
+}
+  
 async function setup(){
+  setupGoogleCalendarLink();
   $form = document.querySelector('#rsvpForm');
   $formMsg = document.querySelector('#formMsg');
   $syncStatus = document.querySelector('#syncStatus');
