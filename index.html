@@ -264,46 +264,6 @@ function render(){
   }
 }
 
-$form.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-
-  const formData = new FormData($form);
-  const name = String(formData.get('name') || '').trim();
-  if(!name){
-    $formMsg.textContent = "Please enter your name.";
-    $formMsg.className = "text-sm font-bold text-red-700";
-    return;
-  }
-
-  const entry = {
-  id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || String(Date.now()),
-  name,
-  status: String(formData.get('status') || 'Yes'),
-  guests: Number(formData.get('guests') || 0),
-  bringing: String(formData.get('bringing') || '').trim(),
-  keg: String(formData.get('keg') || '').trim(),
-  notes: String(formData.get('notes') || '').trim(),
-  updatedAt: new Date().toISOString()
-  };
-
-  const existingIdx = (state.rsvps || []).findIndex(r => r.id === entry.id);
-  if(existingIdx >= 0) state.rsvps[existingIdx] = entry;
-  else state.rsvps.push(entry);
-
-  render();
-  lastPushTs = Date.now();
-  const ok = await saveRemote(state);
-  if(ok){
-    $formMsg.textContent = "RSVP saved — thank you!";
-    $formMsg.className = "text-sm font-bold text-emerald-700";
-    showSync("Live sync enabled");
-  } else {
-    $formMsg.textContent = "Saved on this device, but shared sync is not connected yet.";
-    $formMsg.className = "text-sm font-bold text-amber-700";
-    showSync("Sync offline — add your Apps Script URL", false);
-  }
-});
-
 async function pollRemote(){
   if(document.hidden || !CONFIG.syncEndpoint || CONFIG.syncEndpoint.includes("YOUR_APPS_SCRIPT_URL_HERE")) return;
   if(Date.now() - lastPushTs < 5000) return;
@@ -335,6 +295,53 @@ async function setup(){
   $rsvpList = document.querySelector('#rsvpList');
   $foodList = document.querySelector('#foodList');
   $countBadge = document.querySelector('#countBadge');
+
+  $form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+
+  const formData = new FormData($form);
+  const name = String(formData.get('name') || '').trim();
+
+  if(!name){
+    $formMsg.textContent = "Please enter your name.";
+    $formMsg.className = "text-sm font-bold text-red-700";
+    return;
+  }
+
+  const entry = {
+    id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || String(Date.now()),
+    name,
+    status: String(formData.get('status') || 'Yes'),
+    guests: Number(formData.get('guests') || 0),
+    bringing: String(formData.get('bringing') || '').trim(),
+    keg: String(formData.get('keg') || '').trim(),
+    notes: String(formData.get('notes') || '').trim(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const existingIdx = (state.rsvps || []).findIndex(r => r.id === entry.id);
+
+  if(existingIdx >= 0) {
+    state.rsvps[existingIdx] = entry;
+  } else {
+    state.rsvps.push(entry);
+  }
+
+  render();
+  lastPushTs = Date.now();
+
+  const ok = await saveRemote(state);
+
+  if(ok){
+    $formMsg.textContent = "RSVP saved — thank you!";
+    $formMsg.className = "text-sm font-bold text-emerald-700";
+    showSync("Live sync enabled");
+  } else {
+    $formMsg.textContent = "Saved on this device, but shared sync is not connected yet.";
+    $formMsg.className = "text-sm font-bold text-amber-700";
+    showSync("Sync offline — check Apps Script access", false);
+  }
+});
 
   showSync("Syncing…");
   const remote = await loadRemote();
